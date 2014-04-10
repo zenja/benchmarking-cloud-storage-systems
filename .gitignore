@@ -52,3 +52,5 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
+# drivers' config file, including sensitive credentials
+drivers.conf
