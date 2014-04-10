@@ -1,0 +1,14 @@
+[dropbox]
+app_key = YOUR_APP_KEY
+app_secret = YOUR_APP_SECRET
+access_token = null
+user_id = null
+guest_access_token = null
+guest_user_id = null
+
+[google_drive]
+client_id = YOUR_CLIENT_ID
+client_secret = YOUR_CLIENT_SECRET
+credentials_json = null
+guest_credentials_json = null
+
