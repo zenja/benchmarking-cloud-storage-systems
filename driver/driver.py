@@ -3,6 +3,7 @@ from ConfigParser import SafeConfigParser
 
 class Driver(object):
     def __init__(self):
+        """load configuration file"""
         self.base_path = os.path.dirname(os.path.abspath(__file__))
         config_filename = "drivers.conf"
         self.config_path = os.path.join(self.base_path, config_filename)
@@ -18,16 +19,17 @@ class Driver(object):
             sys.exit(1)
 
     def acquire_access_token(self, guest=False):
-        pass
+        raise NotImplementedError()
 
     def connect(self, include_guest=False):
-        pass
+        raise NotImplementedError()
 
     def download(self, remote_filename, local_filename):
-        pass
+        raise NotImplementedError()
 
     def upload(self, local_filename, remote_filename):
-        pass
+        raise NotImplementedError()
 
     def share(self, host_filename, guest_filename):
-        pass
+        raise NotImplementedError()
+
