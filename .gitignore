@@ -54,3 +54,6 @@ docs/_build/
 
 # drivers' config file, including sensitive credentials
 drivers.conf
+
+# pycharm project files
+.idea
