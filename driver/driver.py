@@ -1,5 +1,8 @@
 import os
+import sys
+
 from ConfigParser import SafeConfigParser
+
 
 class Driver(object):
     def __init__(self):
