@@ -10,3 +10,4 @@ if __name__ == '__main__':
     file_obj = generator.make_file(size=10240, delete=True)
     uploader.upload(local_filename=file_obj.name)
     file_obj.close()
+    uploader.upload_dir('./', '/benchmark-test')
