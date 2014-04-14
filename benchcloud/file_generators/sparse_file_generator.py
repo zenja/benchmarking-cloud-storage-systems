@@ -7,11 +7,11 @@ class SparseFileGenerator(FileGenerator):
     def __init__(self, **kwargs):
         super(SparseFileGenerator, self).__init__(**kwargs)
 
-    def make_file(self, repeat_str, **kwargs):
+    def make_file(self, size, repeat_str=' ', **kwargs):
         kwargs['is_binary'] = False
         # repeat_char to be passed to generate_file_content:
         kwargs['repeat_str'] = repeat_str
-        return super(SparseFileGenerator, self).make_file(**kwargs)
+        return super(SparseFileGenerator, self).make_file(size=size, **kwargs)
 
     def generate_file_content(self, size, **kwargs):
         repeat_string = kwargs['repeat_str']
