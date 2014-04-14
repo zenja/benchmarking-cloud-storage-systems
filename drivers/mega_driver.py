@@ -5,6 +5,7 @@ from mega import Mega
 
 from driver import Driver
 
+
 class MegaDriver(Driver):
     def __init__(self, verbose=True):
         super(MegaDriver, self).__init__()
