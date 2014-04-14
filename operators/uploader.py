@@ -4,6 +4,11 @@ import ntpath
 
 class Uploader(object):
     def __init__(self, server_driver):
+        """Init a Uploader object
+
+        Args:
+            server_driver: a driver already connected to cloud service
+        """
         if not issubclass(driver.Driver, driver.Driver):
             raise TypeError('Driver should be a subclass of drivers.driver.Driver')
         self.driver = server_driver
