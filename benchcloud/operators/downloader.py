@@ -1,7 +1,7 @@
 import os
 
-from drivers import driver
-from file_utils import file_util
+from benchcloud.drivers import driver
+from benchcloud.file_utils import file_util
 
 
 class Downloader(object):

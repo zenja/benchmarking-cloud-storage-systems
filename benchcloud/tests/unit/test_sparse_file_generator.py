@@ -1,4 +1,4 @@
-from file_generators.sparse_file_generator import SparseFileGenerator
+from benchcloud.file_generators.sparse_file_generator import SparseFileGenerator
 
 if __name__ == '__main__':
     generator = SparseFileGenerator(directory="./", prefix="sparse-", suffix=".txt")

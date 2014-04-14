@@ -1,6 +1,6 @@
-from drivers.dropbox_driver import DropboxDriver
-from operators.uploader import Uploader
-from file_generators.random_file_generator import RandomFileGenerator
+from benchcloud.drivers.dropbox_driver import DropboxDriver
+from benchcloud.operators.uploader import Uploader
+from benchcloud.file_generators.random_file_generator import RandomFileGenerator
 
 if __name__ == '__main__':
     dbox = DropboxDriver()
