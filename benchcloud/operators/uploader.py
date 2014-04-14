@@ -1,5 +1,7 @@
-from benchcloud.drivers import driver
+import os
 import ntpath
+
+from benchcloud.drivers import driver
 
 
 class Uploader(object):
@@ -23,3 +25,17 @@ class Uploader(object):
             remote_filename = ntpath.basename(local_filename)
         self.driver.upload(local_filename=local_filename,
                            remote_filename=remote_filename)
+
+    def upload_dir(self, local_dir, remote_dir):
+        """Upload all files from a local dir to a remote dir.
+
+        Note it is not done recursively, so subdirectories will not
+        be uploaded.
+        """
+        filename_list = [os.path.join(local_dir, base) for base in os.listdir(local_dir)]
+        for base in os.listdir(local_dir):
+            local_filename = os.path.join(local_dir, base)
+            if remote_dir[-1] != '/':
+                remote_dir += '/'
+            remote_filename = remote_dir + base
+            self.upload(local_filename=local_filename, remote_filename=remote_filename)
