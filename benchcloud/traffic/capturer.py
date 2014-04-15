@@ -8,7 +8,7 @@ import pcapy
 
 class Capturer(threading.Thread):
     def __init__(self, device, snaplen, promisc=False,
-                 to_ms=0, filename="capture_data", cap_filter=None):
+                 to_ms=0, filename="capture_data.pcap", cap_filter=None):
         threading.Thread.__init__(self)
         self.setDaemon(True)
         self.device = device
