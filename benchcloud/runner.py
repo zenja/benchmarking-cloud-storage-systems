@@ -34,6 +34,8 @@ class Runner(object):
         self.driver_conf = dict(self.parser.items('driver'))
         self.operator_conf = dict(self.parser.items('operator'))
         self.file_generator_conf = dict(self.parser.items('file_generator'))
+        self.file_generator_conf['size'] = int(self.file_generator_conf['size'])
+        self.file_generator_conf['delete'] = self.parser.get('file_generator', 'delete')
 
     def init_logging(self):
         self.logging_enabled = self.parser.getboolean('logging', 'enabled')
