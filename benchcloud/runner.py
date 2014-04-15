@@ -99,7 +99,9 @@ class Runner(object):
 
             # Sleep
             if self.sleep_enabled:
+                self.log("About to sleep for {} second(s)...".format(self.sleep_seconds))
                 sleep(self.sleep_seconds)
+                self.log("Sleep finished, now wake up.")
         self.log('')
         self.log('All {} operations finished! :)'.format(self.times))
 
