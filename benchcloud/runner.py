@@ -81,7 +81,7 @@ class Runner(object):
             millis_start = int(round(time() * 1000))
             file_obj = self.file_generator.make_file(size=file_size)
             millis_end = int(round(time() * 1000))
-            self.log("({}ms) File generated: {}".format(millis_end-millis_start, file_obj.name))
+            self.log("File generated: {} ({}ms)".format(file_obj.name, millis_end-millis_start))
 
             # Execute operation
             operation_method_params = self.get_operation_method_params(file_obj)
@@ -89,7 +89,7 @@ class Runner(object):
             millis_start = int(round(time() * 1000))
             operation_method(**operation_method_params)
             millis_end = int(round(time() * 1000))
-            self.log('({}ms) Operation finished.'.format(millis_end-millis_start))
+            self.log("Operation finished. ({}ms)".format(millis_end-millis_start))
 
             # Close file object
             file_obj.close()
