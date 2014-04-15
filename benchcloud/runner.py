@@ -1,7 +1,8 @@
 import os
-import sys
 import importlib
 import json
+import sys
+import argparse
 from time import time, localtime, strftime, sleep
 
 from ConfigParser import SafeConfigParser
@@ -114,11 +115,18 @@ class Runner(object):
         class_name = parts[-1]
         return module_name, class_name
 
+    def auth_driver(self):
+        """Acquire authentication info needed to use driver"""
+        self.driver.acquire_access_token()
+
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print "[Usage] python runner.py <config_file>"
-        sys.exit(1)
-    conf_filename = sys.argv[1]
+    arg_parser = argparse.ArgumentParser(description='Execute benchmarking predefined in a configuration file.')
+    arg_parser.add_argument('-f', action='store', dest='conf_filename', help='Configuration file', required=True)
+    arg_parser.add_argument('-a', action='store_true', default=False, dest='auth', help='Make authentication')
+    results = arg_parser.parse_args()
+    conf_filename = results.conf_filename
     runner = Runner(conf_filename)
+    if results.auth:
+        runner.auth_driver()
     runner.run()
