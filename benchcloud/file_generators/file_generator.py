@@ -3,7 +3,7 @@ import tempfile
 
 
 class FileGenerator(object):
-    def __init__(self, directory=None, prefix='', suffix='', delete=False):
+    def __init__(self, directory=None, prefix='', suffix='', delete=False, **kwargs):
         """ Constructor of FileGenerator
 
         Args:
