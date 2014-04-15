@@ -12,6 +12,9 @@ class IdenticalFileGenerator(FileGenerator):
 
     def make_file(self, **kwargs):
         kwargs['is_binary'] = True
+        # ignore size param because size is already fixed in __init__()
+        if 'size' in kwargs:
+            kwargs.pop('size')
         return super(IdenticalFileGenerator, self).make_file(size=0, **kwargs)
 
     def generate_file_content(self, size, **kwargs):
