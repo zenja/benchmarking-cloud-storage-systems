@@ -2,6 +2,7 @@ import os
 import ntpath
 
 from benchcloud.drivers import driver
+from benchcloud.file_utils import file_util
 
 
 class Uploader(object):
@@ -15,14 +16,22 @@ class Uploader(object):
             raise TypeError('Driver should be a subclass of drivers.driver.Driver')
         self.driver = server_driver
 
-    def upload(self, local_filename, remote_filename=None):
+    def upload(self, local_filename, remote_filename=None, remote_dir=None):
         """Upload a file to a cloud
 
         Args:
-            filename: the filename of the local file to be uploaded
+            local_filename: the filename of the local file to be uploaded
+            remote_filename: the filename of the remote file
+            remote_dir: the directory of remote cloud
         """
-        if remote_filename is None:
-            remote_filename = ntpath.basename(local_filename)
+        base_filename = file_util.path_leaf(local_filename)
+        if remote_dir is not None:
+            if remote_dir[-1] != '/':
+                remote_dir += '/'
+            remote_filename = remote_dir + base_filename
+        else:
+            if remote_filename is None:
+                remote_filename = ntpath.basename(local_filename)
         self.driver.upload(local_filename=local_filename,
                            remote_filename=remote_filename)
 
