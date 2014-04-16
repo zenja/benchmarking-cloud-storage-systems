@@ -19,6 +19,7 @@ class Runner(object):
             self.sleep_seconds = self.parser.getint('test', 'sleep_seconds')
 
         self.init_logging()
+        self.operation_times = []
         self.load_testers()
 
     def load_conf(self, filename):
@@ -67,7 +68,10 @@ class Runner(object):
         millis = int(round(time() * 1000))
         timestamp = "[{}] {} |".format(millis, strftime("%d %b %Y %H:%M:%S", localtime()))
         whole_message = "{} {}\n".format(timestamp, message)
-        self.logfile_obj.write(whole_message)
+        self.log_raw(whole_message)
+
+    def log_raw(self, raw_message):
+        self.logfile_obj.write(raw_message)
 
     def run(self):
         """Start running benchmark."""
@@ -92,6 +96,7 @@ class Runner(object):
             operation_method(**operation_method_params)
             millis_end = int(round(time() * 1000))
             self.log("Operation finished. ({}ms)".format(millis_end-millis_start))
+            self.operation_times.append(millis_end-millis_start)
 
             # Close file object
             file_obj.close()
