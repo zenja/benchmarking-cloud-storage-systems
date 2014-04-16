@@ -32,6 +32,8 @@ class Runner(object):
             except IOError:
                 print "ERROR opening config file: {}".format(filename)
                 sys.exit(1)
+        else:
+            print 'The configure file does not exist: {}'.format(filename)
         self.test_conf = dict(self.parser.items('test'))
         self.driver_conf = dict(self.parser.items('driver'))
         self.operator_conf = dict(self.parser.items('operator'))
