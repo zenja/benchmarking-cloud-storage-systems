@@ -4,8 +4,9 @@ import json
 import sys
 import argparse
 from time import time, localtime, strftime, sleep
-
 from ConfigParser import SafeConfigParser
+
+from prettytable import PrettyTable
 
 
 class Runner(object):
@@ -73,6 +74,25 @@ class Runner(object):
     def log_raw(self, raw_message):
         self.logfile_obj.write(raw_message)
 
+    def make_statistics(self):
+        """Make statistics for operation time
+
+        Return:
+            A pretty message showing the statistics
+        """
+        result = ''
+        table_op_time = PrettyTable(['Operation', 'Time'])
+        table_op_time.padding_width = 1
+        for i, t in enumerate(self.operation_times):
+            table_op_time.add_row(['#{}'.format(i), '{}ms'.format(t)])
+        table_stat = PrettyTable(['Min', 'Max', 'Average'])
+        table_stat.padding_width = 1
+        t_min = min(self.operation_times)
+        t_max = max(self.operation_times)
+        t_avg = sum(self.operation_times) / len(self.operation_times)
+        table_stat.add_row(['{}ms'.format(t) for t in (t_min, t_max, t_avg)])
+        return '{}\n{}'.format(str(table_op_time), str(table_stat))
+
     def run(self):
         """Start running benchmark."""
         self.log("Start testing: {}".format(self.description))
@@ -109,6 +129,16 @@ class Runner(object):
                 self.log("Sleep finished, now wake up.")
         self.log('')
         self.log('All {} operations finished! :)'.format(self.times))
+
+        # log statistics for operation time
+        self.log_raw('\nStatistics of all operations:\n')
+        statistics = self.make_statistics()
+        self.log_raw(statistics)
+
+        # print statistics
+        print 'All operations finished!'
+        print ''
+        print statistics
 
     def get_operation_method_params(self, file_obj):
         result = json.loads(self.operator_conf['operation_method_params'])
