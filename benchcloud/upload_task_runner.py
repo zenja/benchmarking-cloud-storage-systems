@@ -9,7 +9,7 @@ from ConfigParser import SafeConfigParser
 from prettytable import PrettyTable
 
 
-class Runner(object):
+class UploadTaskRunner(object):
     def __init__(self, conf_filename):
         self.load_conf(conf_filename)
 
@@ -49,20 +49,20 @@ class Runner(object):
 
     def load_testers(self):
         # driver
-        driver_module_name, driver_class_name = Runner.parse_class(self.driver_conf['class'])
+        driver_module_name, driver_class_name = UploadTaskRunner.parse_class(self.driver_conf['class'])
         driver_module = importlib.import_module(driver_module_name)
         driver_class = getattr(driver_module, driver_class_name)
         self.driver = driver_class()
         self.driver.connect()
 
         # operator
-        operator_module_name, operator_class_name = Runner.parse_class(self.operator_conf['class'])
+        operator_module_name, operator_class_name = UploadTaskRunner.parse_class(self.operator_conf['class'])
         operator_module = importlib.import_module(operator_module_name)
         operator_class = getattr(operator_module, operator_class_name)
         self.operator = operator_class(server_driver=self.driver)
 
         # file generator
-        generator_module_name, generator_class_name = Runner.parse_class(self.file_generator_conf['class'])
+        generator_module_name, generator_class_name = UploadTaskRunner.parse_class(self.file_generator_conf['class'])
         generator_module = importlib.import_module(generator_module_name)
         generator_class = getattr(generator_module, generator_class_name)
         self.file_generator = generator_class(**self.file_generator_conf)
@@ -167,7 +167,7 @@ if __name__ == '__main__':
     arg_parser.add_argument('-a', action='store_true', default=False, dest='auth', help='Make authentication')
     results = arg_parser.parse_args()
     conf_filename = results.conf_filename
-    runner = Runner(conf_filename)
+    runner = UploadTaskRunner(conf_filename)
     if results.auth:
         runner.auth_driver()
     runner.run()
