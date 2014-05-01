@@ -36,3 +36,5 @@ class Driver(object):
     def share(self, host_filename, guest_filename):
         raise NotImplementedError()
 
+    def list_files(self, remote_dir):
+        raise NotImplementedError()

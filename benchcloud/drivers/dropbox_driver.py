@@ -58,8 +58,31 @@ class DropboxDriver(Driver):
         copy_ref = self.client.create_copy_ref(host_filename)['copy_ref']
         self.guest_client.add_copy_ref(copy_ref, guest_filename)
 
+    def list_files(self, remote_dir='/'):
+        """ List all files in a remote directory
+
+        Return:
+            A map containing the metadata of all files in the directory.
+            Structure of the resulting map:
+            [{'path': file1_path, 'size': file1_size, 'is_dir': is_file1_a_directory},
+            {'path': file2_path, 'size': file2_size, 'is_dir': is_file2_a_directory},
+            ...,
+            ]
+        """
+        result = []
+        folder_metadata = self.client.metadata(remote_dir)
+        for file_metadata in folder_metadata['contents']:
+            item = {}
+            item['path'] = file_metadata['path']
+            item['size'] = file_metadata['size']
+            item['is_dir'] = file_metadata['is_dir']
+            result.append(item)
+        return result
+
+
 if __name__ == "__main__":
     dbox = DropboxDriver()
     dbox.connect(include_guest=True)
     #dbox.share(host_filename="/CV_CL/Xing_CV.txt", guest_filename="/Xing_CV.txt")
     #dbox.download(remote_filename="/CV_CL/Xing_CV.pdf", local_filename="./cv.pdf")
+    #print dbox.list_files(remote_dir='/CV_CL')
