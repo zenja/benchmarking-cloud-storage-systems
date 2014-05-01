@@ -161,7 +161,7 @@ class UploadTaskRunner(object):
         self.driver.acquire_access_token()
 
 
-if __name__ == '__main__':
+def main():
     arg_parser = argparse.ArgumentParser(description='Execute benchmarking predefined in a configuration file.')
     arg_parser.add_argument('-f', action='store', dest='conf_filename', help='Configuration file', required=True)
     arg_parser.add_argument('-a', action='store_true', default=False, dest='auth', help='Make authentication')
@@ -171,3 +171,7 @@ if __name__ == '__main__':
     if results.auth:
         runner.auth_driver()
     runner.run()
+
+
+if __name__ == '__main__':
+    main()
