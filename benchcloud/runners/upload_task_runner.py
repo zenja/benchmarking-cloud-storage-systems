@@ -1,4 +1,5 @@
 import os
+import sys
 import importlib
 import json
 import sys
@@ -161,11 +162,13 @@ class UploadTaskRunner(object):
         self.driver.acquire_access_token()
 
 
-def main():
-    arg_parser = argparse.ArgumentParser(description='Execute benchmarking predefined in a configuration file.')
+def main(prog=None, args=None):
+    arg_parser = argparse.ArgumentParser(
+        prog=prog,
+        description='Uploader: Execute benchmarking predefined in a configuration file.')
     arg_parser.add_argument('-f', action='store', dest='conf_filename', help='Configuration file', required=True)
     arg_parser.add_argument('-a', action='store_true', default=False, dest='auth', help='Make authentication')
-    results = arg_parser.parse_args()
+    results = arg_parser.parse_args(args=args)
     conf_filename = results.conf_filename
     runner = UploadTaskRunner(conf_filename)
     if results.auth:
@@ -174,4 +177,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])

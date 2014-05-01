@@ -11,4 +11,4 @@ Try it
     cd benchmarking-cloud-storage-systems
     pip install -r requirements.txt
     # you may want to start sniffing network traffic using tcpdump/wireshark/benchcloud.traffic.capturer before benchmarking:
-    python -m benchcloud.upload_task_runner -f benchcloud/example_benchmarking_conf/dropbox_random_upload_0.conf -a
+    python -m benchcloud.benchcloud uploader -f benchcloud/example_benchmarking_conf/dropbox_random_upload_0.conf -a
