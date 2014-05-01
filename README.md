@@ -12,3 +12,4 @@ Try it
     pip install -r requirements.txt
     # you may want to start sniffing network traffic using tcpdump/wireshark/benchcloud.traffic.capturer before benchmarking:
     python -m benchcloud.benchcloud uploader -f benchcloud/example_benchmarking_conf/dropbox_random_upload_0.conf -a
+    python -m benchcloud.benchcloud downloader -f benchcloud/example_benchmarking_conf/dropbox_download_0.conf

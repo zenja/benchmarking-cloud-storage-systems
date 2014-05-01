@@ -1,10 +1,15 @@
 import sys
 
 from runners import upload_task_runner
+from runners import download_task_runner
 
 
 def handle_uploader(extra_args):
     upload_task_runner.main(prog='uploader', args=extra_args)
+
+
+def handle_downloader(extra_args):
+    download_task_runner.main(prog='downloader', args=extra_args)
 
 
 def handle_help(extra_args):
@@ -13,6 +18,7 @@ def handle_help(extra_args):
 
 command_map = {
     'uploader': handle_uploader,
+    'downloader': handle_downloader,
     'help': handle_help
 }
 
