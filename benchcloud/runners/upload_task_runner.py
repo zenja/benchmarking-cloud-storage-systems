@@ -8,6 +8,8 @@ from ConfigParser import SafeConfigParser
 
 from prettytable import PrettyTable
 
+import runner_util
+
 
 class UploadTaskRunner(object):
     def __init__(self, conf_filename):
@@ -49,20 +51,20 @@ class UploadTaskRunner(object):
 
     def load_testers(self):
         # driver
-        driver_module_name, driver_class_name = UploadTaskRunner.parse_class(self.driver_conf['class'])
+        driver_module_name, driver_class_name = runner_util.parse_class(self.driver_conf['class'])
         driver_module = importlib.import_module(driver_module_name)
         driver_class = getattr(driver_module, driver_class_name)
         self.driver = driver_class()
         self.driver.connect()
 
         # operator
-        operator_module_name, operator_class_name = UploadTaskRunner.parse_class(self.operator_conf['class'])
+        operator_module_name, operator_class_name = runner_util.parse_class(self.operator_conf['class'])
         operator_module = importlib.import_module(operator_module_name)
         operator_class = getattr(operator_module, operator_class_name)
         self.operator = operator_class(server_driver=self.driver)
 
         # file generator
-        generator_module_name, generator_class_name = UploadTaskRunner.parse_class(self.file_generator_conf['class'])
+        generator_module_name, generator_class_name = runner_util.parse_class(self.file_generator_conf['class'])
         generator_module = importlib.import_module(generator_module_name)
         generator_class = getattr(generator_module, generator_class_name)
         self.file_generator = generator_class(**self.file_generator_conf)
@@ -148,13 +150,6 @@ class UploadTaskRunner(object):
             if "<generated_file.name>".lower() == v.lower():
                 result[k] = file_obj.name
         return result
-
-    @staticmethod
-    def parse_class(path):
-        parts = path.split('.')
-        module_name = '.'.join(parts[:-1])
-        class_name = parts[-1]
-        return module_name, class_name
 
     def auth_driver(self):
         """Acquire authentication info needed to use driver"""
