@@ -2,7 +2,6 @@ import os
 import sys
 import importlib
 import json
-import sys
 import argparse
 from time import time, localtime, strftime, sleep
 from ConfigParser import SafeConfigParser
