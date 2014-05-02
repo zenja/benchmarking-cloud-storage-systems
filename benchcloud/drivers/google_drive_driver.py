@@ -94,16 +94,13 @@ class GoogleDriveDriver(Driver):
             # The file doesn't have any content stored on Drive.
             return None
 
-    def retrieve_all_files(self):
+    def retrieve_all_files(self, page_token=None):
         """Retrieve a list of File resources.
 
-        Args:
-            service: Drive API service instance.
         Returns:
             List of File resources.
         """
         result = []
-        page_token = None
         while True:
             try:
                 param = {}
@@ -160,11 +157,12 @@ class GoogleDriveDriver(Driver):
 
 
 if __name__ == "__main__":
+    import pprint
     gdrive = GoogleDriveDriver()
     #gdrive.acquire_access_token(guest=True)
     gdrive.connect(include_guest=True)
     #gdrive.upload("./test.txt", "lalala2.txt")
     #gdrive.download(remote_file_id="0B-hO3za-N_vrQ0FlOGE2b3ktQlk", local_filename="./test.pdf")
-    #print gdrive.retrieve_all_files()
     #print gdrive.download_by_filename(remote_filename="lalala.txt", local_filename="la-la-la.txt")
-    gdrive.download(remote_filename="lalala.txt", local_filename="./download.txt")
+    #gdrive.download(remote_filename="lalala.txt", local_filename="./download.txt")
+    pprint.pprint(gdrive.retrieve_all_files())
