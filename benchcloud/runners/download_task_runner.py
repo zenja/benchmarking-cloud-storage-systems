@@ -9,6 +9,7 @@ from prettytable import PrettyTable
 
 import runner_util
 from benchcloud.file_utils import file_util
+from benchcloud.traffic import capturer
 
 
 class DownloadTaskRunner(object):
@@ -135,9 +136,15 @@ def main(prog=None, args=None):
         description='Downloader: Execute benchmarking predefined in a configuration file.')
     arg_parser.add_argument('-f', action='store', dest='conf_filename', help='Configuration file', required=True)
     arg_parser.add_argument('-a', action='store_true', default=False, dest='auth', help='Make authentication')
+    arg_parser.add_argument('-c', action='store', dest='capturer_conf_filename', default='', help='Capturer configuration file')
     results = arg_parser.parse_args(args=args)
     conf_filename = results.conf_filename
     runner = DownloadTaskRunner(conf_filename)
+    if results.auth:
+        runner.auth_driver()
+    if results.capturer_conf_filename:
+        the_capturer = capturer.from_conf(results.capturer_conf_filename)
+        the_capturer.start()
     runner.run()
 
 

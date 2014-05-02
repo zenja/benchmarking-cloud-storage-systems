@@ -1,7 +1,10 @@
 from __future__ import print_function
+import os
+import sys
 import time
 import threading
 from sys import stderr
+from ConfigParser import SafeConfigParser
 
 import pcapy
 
@@ -42,11 +45,38 @@ class Capturer(threading.Thread):
         self.stop = True
 
     def _handle_packet(self, header, data):
-        print("A new packet captured - timestamp: {}; capture length: {}; total length: {}".format(
-            header.getts(), header.getcaplen(), header.getlen()))
+        #print("A new packet captured - timestamp: {}; capture length: {}; total length: {}".format(
+        #    header.getts(), header.getcaplen(), header.getlen()))
         self.dumper.dump(header, data)
 
+
+def from_conf(conf_filename):
+    """Make a Capturer object from configuration file"""
+    if os.path.exists(conf_filename):
+        try:
+            parser = SafeConfigParser()
+            parser.read(conf_filename)
+            device = parser.get('capture', 'device')
+            snaplen = parser.getint('capture', 'snaplen')
+            promisc = parser.getboolean('capture', 'promisc')
+            to_ms = parser.getint('capture', 'to_ms')
+            pcap_filename = parser.get('capture', 'filename')
+            if parser.has_option('capture', 'filter'):
+                cap_filter = parser.get('capture', 'filter')
+            else:
+                cap_filter = None
+            capturer = Capturer(device=device, snaplen=snaplen, promisc=promisc,
+                                to_ms=to_ms, cap_filter=cap_filter, filename=pcap_filename)
+            return capturer
+        except IOError:
+            print("ERROR opening config file: {}".format(conf_filename))
+            sys.exit(-1)
+    else:
+        print('The configure file does not exist: {}'.format(conf_filename))
+        sys.exit(-1)
+
 if __name__ == '__main__':
+    # TODO: param to assign a conf file
     cap = Capturer('en0', snaplen=65535, to_ms=3000)
     cap.start()
     time.sleep(5)
