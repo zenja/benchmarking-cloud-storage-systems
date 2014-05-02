@@ -62,7 +62,7 @@ class GoogleDriveDriver(Driver):
         """
         if remote_filename:
             self.download_by_filename(remote_filename=remote_filename, local_filename=local_filename)
-        elif remote_filename:
+        elif remote_file_id:
             drive_file = self._get_file_instance(remote_file_id)
             self.download_file_object(drive_file, local_filename)
         else:
