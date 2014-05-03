@@ -184,10 +184,8 @@ class UploadTaskRunner(object):
             self.task_queue.put(seq)
 
         # starting task worker threads
-        task_threads = []
         for i in range(self.task_thread_num):
             t = Thread(target=self.upload_worker)
-            task_threads.append(t)
             t.setDaemon(True)
             t.start()
 
