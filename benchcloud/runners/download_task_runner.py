@@ -185,9 +185,9 @@ class DownloadTaskRunner(object):
         print ''
         print statistics
 
-    def debug_thread(self):
-        while True:
-            print "Number of unhandled tasks: {}".format(self.task_queue.qsize())
+    def auth_driver(self):
+        """Acquire authentication info needed to use driver"""
+        self.driver.acquire_access_token()
 
 def main(prog=None, args=None):
     arg_parser = argparse.ArgumentParser(
