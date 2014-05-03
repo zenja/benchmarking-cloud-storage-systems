@@ -141,6 +141,9 @@ class DownloadTaskRunner(object):
 
         self.log("Start testing: {}".format(self.description))
 
+        # bookkeeping start time for all operations
+        millis_start = int(round(time() * 1000))
+
         # sending all tasks into task queue
         # a task is just a number indication its operation sequence
         local_dir = self.test_conf['local_dir']
@@ -169,6 +172,10 @@ class DownloadTaskRunner(object):
         # wait for all tasks to be handled
         self.task_queue.join()
 
+        # get total amount of time spent for all operations
+        millis_end = int(round(time() * 1000))
+        millis_total = millis_end - millis_start
+
         print "task_queue.join() returned"
 
         # all operations should have finished now,
@@ -179,6 +186,7 @@ class DownloadTaskRunner(object):
         self.log_raw('\nStatistics of all operations:\n')
         statistics = self.make_statistics()
         self.log_raw(statistics)
+        self.log('Time spent for all operations: {}ms'.format(millis_total))
 
         # print statistics
         print 'All operations finished!'

@@ -183,6 +183,9 @@ class UploadTaskRunner(object):
         for seq in range(self.times):
             self.task_queue.put(seq)
 
+        # bookkeeping start time for all operations
+        millis_start = int(round(time() * 1000))
+
         # starting task worker threads
         for i in range(self.task_thread_num):
             t = Thread(target=self.upload_worker)
@@ -192,6 +195,10 @@ class UploadTaskRunner(object):
         # wait for all tasks to be handled
         self.task_queue.join()
 
+        # get total amount of time spent for all operations
+        millis_end = int(round(time() * 1000))
+        millis_total = millis_end - millis_start
+
         # all operations should have finished now
         # do no need to put to log queue first
         self.log('\nAll {} operations finished! :)'.format(self.times))
@@ -200,6 +207,7 @@ class UploadTaskRunner(object):
         self.log_raw('\nStatistics of all operations:\n')
         statistics = self.make_statistics()
         self.log_raw(statistics)
+        self.log('Time spent for all operations: {}ms'.format(millis_total))
 
         # print statistics
         print 'All operations finished!'
