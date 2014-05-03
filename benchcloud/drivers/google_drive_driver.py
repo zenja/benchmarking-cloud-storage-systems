@@ -135,7 +135,6 @@ class GoogleDriveDriver(Driver):
             'mimeType': mime_type,
         }
         file = self.drive_service.files().insert(body=body, media_body=media_body).execute()
-        print file
         return file
 
     def share(self, host_filename, guest_filename):
