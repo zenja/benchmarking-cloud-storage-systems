@@ -207,6 +207,7 @@ class UploadTaskRunner(object):
         self.log_raw('\nStatistics of all operations:\n')
         statistics = self.make_statistics()
         self.log_raw(statistics)
+        self.log_raw('\n')
         self.log('Time spent for all operations: {}ms'.format(millis_total))
 
         # print statistics
@@ -214,6 +215,7 @@ class UploadTaskRunner(object):
         print ''
         print statistics
         print '\n'
+        print 'Time spent for all operations: {}ms'.format(millis_total)
 
     def get_operation_method_params(self, file_obj):
         result = json.loads(self.operator_conf['operation_method_params'])

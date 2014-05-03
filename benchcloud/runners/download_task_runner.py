@@ -186,6 +186,7 @@ class DownloadTaskRunner(object):
         self.log_raw('\nStatistics of all operations:\n')
         statistics = self.make_statistics()
         self.log_raw(statistics)
+        self.log_raw('\n')
         self.log('Time spent for all operations: {}ms'.format(millis_total))
 
         # print statistics
@@ -193,6 +194,7 @@ class DownloadTaskRunner(object):
         print ''
         print statistics
         print '\n'
+        print 'Time spent for all operations: {}ms'.format(millis_total)
 
     def auth_driver(self):
         """Acquire authentication info needed to use driver"""
