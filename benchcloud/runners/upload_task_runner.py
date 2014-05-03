@@ -3,6 +3,8 @@ import sys
 import importlib
 import json
 import argparse
+import Queue
+from threading import Thread
 from time import time, localtime, strftime, sleep
 from ConfigParser import SafeConfigParser
 
@@ -16,14 +18,13 @@ class UploadTaskRunner(object):
     def __init__(self, conf_filename):
         self.load_conf(conf_filename)
 
-        self.description = self.test_conf['description']
-        self.times = self.parser.getint('test', 'times')
-        self.sleep_enabled = self.parser.getboolean('test', 'sleep')
-        if self.sleep_enabled:
-            self.sleep_seconds = self.parser.getint('test', 'sleep_seconds')
+        # init task queue, log queue, operation_times map
+        self.task_queue = Queue.Queue()
+        self.log_queue = Queue.Queue()
+        # {operation sequence -> operation time in milliseconds, ...}
+        self.operation_times = {}
 
         self.init_logging()
-        self.operation_times = []
         self.load_testers()
 
     def load_conf(self, filename):
@@ -37,12 +38,31 @@ class UploadTaskRunner(object):
                 sys.exit(1)
         else:
             print 'The configure file does not exist: {}'.format(filename)
-        self.test_conf = dict(self.parser.items('test'))
+
+        # driver conf
         self.driver_conf = dict(self.parser.items('driver'))
+
+        # operation conf
         self.operator_conf = dict(self.parser.items('operator'))
+
+        # file generator conf
         self.file_generator_conf = dict(self.parser.items('file_generator'))
         self.file_generator_conf['size'] = int(self.file_generator_conf['size'])
         self.file_generator_conf['delete'] = self.parser.get('file_generator', 'delete')
+
+        # basic test conf
+        self.test_conf = dict(self.parser.items('test'))
+        self.description = self.test_conf['description']
+        self.times = self.parser.getint('test', 'times')
+        self.sleep_enabled = self.parser.getboolean('test', 'sleep')
+        if self.sleep_enabled:
+            self.sleep_seconds = self.parser.getint('test', 'sleep_seconds')
+
+        # concurrent conf
+        if self.parser.has_section('concurrent') and self.parser.has_option('concurrent', 'threads'):
+            self.task_thread_num = max(1, min(self.times, self.parser.getint('concurrent', 'threads')))
+        else:
+            self.task_thread_num = 1
 
     def init_logging(self):
         self.logging_enabled = self.parser.getboolean('logging', 'enabled')
@@ -88,52 +108,95 @@ class UploadTaskRunner(object):
         result = ''
         table_op_time = PrettyTable(['Operation', 'Time'])
         table_op_time.padding_width = 1
-        for i, t in enumerate(self.operation_times):
+        for i, t in self.operation_times.iteritems():
             table_op_time.add_row(['#{}'.format(i), '{}ms'.format(t)])
         table_stat = PrettyTable(['Min', 'Max', 'Average'])
         table_stat.padding_width = 1
-        t_min = min(self.operation_times)
-        t_max = max(self.operation_times)
-        t_avg = sum(self.operation_times) / len(self.operation_times)
+        t_min = min(self.operation_times.itervalues())
+        t_max = max(self.operation_times.itervalues())
+        t_avg = sum(self.operation_times.itervalues()) / len(self.operation_times)
         table_stat.add_row(['{}ms'.format(t) for t in (t_min, t_max, t_avg)])
         return '{}\n{}'.format(str(table_op_time), str(table_stat))
 
-    def run(self):
-        """Start running benchmark."""
-        self.log("Start testing: {}".format(self.description))
+    def upload_worker(self):
+        """A thread worker for uploading files one by one from task queue.
+
+        Should be a daemon thread.
+        """
         file_size = int(self.file_generator_conf['size'])
         operation_method = getattr(self.operator, self.operator_conf['operation_method'])
-        for n in range(self.times):
-            self.log('')
-            self.log("Start operation #{}".format(n))
+        while True:
+            operation_seq = self.task_queue.get()
+
+            self.log_queue.put('\nStart operation #{}'.format(operation_seq))
 
             # Generate file
-            self.log('Generating file...')
+            self.log_queue.put('Operation #{}: Generating file...'.format(operation_seq))
             millis_start = int(round(time() * 1000))
             file_obj = self.file_generator.make_file(size=file_size)
             millis_end = int(round(time() * 1000))
-            self.log("File generated: {} ({}ms)".format(file_obj.name, millis_end-millis_start))
+            self.log_queue.put("Operation #{}: File generated: {} ({}ms)".format(
+                operation_seq, file_obj.name, millis_end-millis_start))
 
             # Execute operation
             operation_method_params = self.get_operation_method_params(file_obj)
-            self.log('About to execute operation...')
+            self.log_queue.put('Operation #{}: About to execute operation...'.format(operation_seq))
             millis_start = int(round(time() * 1000))
             operation_method(**operation_method_params)
             millis_end = int(round(time() * 1000))
-            self.log("Operation finished. ({}ms)".format(millis_end-millis_start))
-            self.operation_times.append(millis_end-millis_start)
+            self.log_queue.put("Operation #{} finished. ({}ms)".format(operation_seq, millis_end-millis_start))
+            self.operation_times[operation_seq] = millis_end-millis_start
 
             # Close file object
             file_obj.close()
-            self.log("File object closed: {}".format(file_obj.name))
+            self.log("Operation #{}: File object closed: {}".format(operation_seq, file_obj.name))
+
+            # notify the queue that we have finished this task
+            self.task_queue.task_done()
 
             # Sleep
             if self.sleep_enabled:
-                self.log("About to sleep for {} second(s)...".format(self.sleep_seconds))
+                self.log("Operation #{}: About to sleep for {} second(s)...".format(
+                    operation_seq, self.sleep_seconds))
                 sleep(self.sleep_seconds)
-                self.log("Sleep finished, now wake up.")
-        self.log('')
-        self.log('All {} operations finished! :)'.format(self.times))
+                self.log("Operation #{}: Sleep finished, now wake up.".format(operation_seq))
+
+    def log_worker(self):
+        """A thread worker for reading logging msg from msg queue and writing to log file.
+
+        Note that the log thread should be a daemon thread.
+        """
+        while True:
+            log_msg = self.log_queue.get()
+            self.log(log_msg)
+
+    def run(self):
+        # start log thread
+        log_thread = Thread(target=self.log_worker)
+        log_thread.setDaemon(True)
+        log_thread.start()
+
+        self.log_queue.put("Start testing: {}".format(self.description))
+
+        # sending all tasks into task queue
+        # a task is just a number indication its operation sequence
+        for seq in range(self.times):
+            self.task_queue.put(seq)
+
+        # starting task worker threads
+        task_threads = []
+        for i in range(self.task_thread_num):
+            t = Thread(target=self.upload_worker)
+            task_threads.append(t)
+            t.setDaemon(True)
+            t.start()
+
+        # wait for all tasks to be handled
+        self.task_queue.join()
+
+        # all operations should have finished now
+        # do no need to put to log queue first
+        self.log('\nAll {} operations finished! :)'.format(self.times))
 
         # log statistics for operation time
         self.log_raw('\nStatistics of all operations:\n')
