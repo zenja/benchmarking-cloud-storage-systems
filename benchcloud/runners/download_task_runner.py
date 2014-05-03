@@ -2,6 +2,8 @@ import os
 import sys
 import importlib
 import argparse
+import Queue
+from threading import Thread
 from time import time, localtime, strftime, sleep
 from ConfigParser import SafeConfigParser
 
@@ -16,13 +18,14 @@ class DownloadTaskRunner(object):
     def __init__(self, conf_filename):
         self.load_conf(conf_filename)
 
-        self.description = self.test_conf['description']
-        self.sleep_enabled = self.parser.getboolean('test', 'sleep')
-        if self.sleep_enabled:
-            self.sleep_seconds = self.parser.getint('test', 'sleep_seconds')
+        # init task queue, log queue, operation_times map
+        # element in task queue: (seq, remote_filename, local_filename)
+        self.task_queue = Queue.Queue()
+        self.log_queue = Queue.Queue()
+        # {operation sequence -> operation time in milliseconds, ...}
+        self.operation_times = {}
 
         self.init_logging()
-        self.operation_times = []
         self.load_testers()
 
     def load_conf(self, filename):
@@ -36,8 +39,22 @@ class DownloadTaskRunner(object):
                 sys.exit(1)
         else:
             print 'The configure file does not exist: {}'.format(filename)
-        self.test_conf = dict(self.parser.items('test'))
+
+        # driver conf
         self.driver_conf = dict(self.parser.items('driver'))
+
+        # basic test conf
+        self.test_conf = dict(self.parser.items('test'))
+        self.description = self.test_conf['description']
+        self.sleep_enabled = self.parser.getboolean('test', 'sleep')
+        if self.sleep_enabled:
+            self.sleep_seconds = self.parser.getint('test', 'sleep_seconds')
+
+        # concurrent conf
+        if self.parser.has_section('concurrent') and self.parser.has_option('concurrent', 'threads'):
+            self.task_thread_num = max(1, self.parser.getint('concurrent', 'threads'))
+        else:
+            self.task_thread_num = 1
 
     def init_logging(self):
         self.logging_enabled = self.parser.getboolean('logging', 'enabled')
@@ -70,50 +87,93 @@ class DownloadTaskRunner(object):
         """
         table_op_time = PrettyTable(['Operation', 'Time'])
         table_op_time.padding_width = 1
-        for i, t in enumerate(self.operation_times):
+        for i, t in self.operation_times.iteritems():
             table_op_time.add_row(['#{}'.format(i), '{}ms'.format(t)])
         table_stat = PrettyTable(['Min', 'Max', 'Average'])
         table_stat.padding_width = 1
-        t_min = min(self.operation_times)
-        t_max = max(self.operation_times)
-        t_avg = sum(self.operation_times) / len(self.operation_times)
+        t_min = min(self.operation_times.itervalues())
+        t_max = max(self.operation_times.itervalues())
+        t_avg = sum(self.operation_times.itervalues()) / len(self.operation_times)
         table_stat.add_row(['{}ms'.format(t) for t in (t_min, t_max, t_avg)])
         return '{}\n{}'.format(str(table_op_time), str(table_stat))
 
-    def run(self):
-        """Start running benchmark."""
-        self.log("Start testing: {}".format(self.description))
+    def download_worker(self):
+        """A thread worker for downloading files one by one from task queue.
 
-        local_dir = self.test_conf['local_dir']
-        remote_dir = self.test_conf['remote_dir']
-        files_metadata = self.driver.list_files(remote_dir=remote_dir)
-        num_normal_file = 0
-        for i, file_md in enumerate(files_metadata):
-            if file_md['is_dir']:
-                continue
+        Should be a daemon thread.
+        """
+        while True:
+            # get task
+            operation_seq, remote_filename, local_filename = self.task_queue.get()
+            self.log_queue.put(u'Start downloading file #{}: {}'.format(operation_seq, remote_filename))
 
-            remote_filename = file_md['path']
-            local_filename = os.path.join(local_dir, file_util.path_leaf(remote_filename))
-            self.log('')
-            self.log(u"Start downloading file #{}: {}".format(num_normal_file, remote_filename))
-
-            # download a file
+            # download the file
             millis_start = int(round(time() * 1000))
-            self.driver.download(remote_filename=file_md['path'], local_filename=local_filename)
+            self.driver.download(remote_filename=remote_filename, local_filename=local_filename)
             millis_end = int(round(time() * 1000))
-            self.log("Operation finished. ({}ms)".format(millis_end-millis_start))
-            self.operation_times.append(millis_end-millis_start)
+            self.log_queue.put("Operation #{} finished. ({}ms)".format(operation_seq, millis_end-millis_start))
+            self.operation_times[operation_seq] = millis_end-millis_start
+
+            # notify that the task is handled
+            self.task_queue.task_done()
 
             # Sleep
             if self.sleep_enabled:
-                self.log("About to sleep for {} second(s)...".format(self.sleep_seconds))
+                self.log_queue.put("Operation #{}: About to sleep for {} second(s)...".format(
+                    operation_seq, self.sleep_seconds))
                 sleep(self.sleep_seconds)
-                self.log("Sleep finished, now wake up.")
+                self.log_queue.put("Operation #{}: Sleep finished, now wake up.".format(operation_seq))
 
-            # add num
-            num_normal_file += 1
-        self.log('')
-        self.log('All {} operations finished! :)'.format(num_normal_file))
+    def log_worker(self):
+        """A thread worker for reading logging msg from msg queue and writing to log file.
+
+        Note that the log thread should be a daemon thread.
+        """
+        while True:
+            log_msg = self.log_queue.get()
+            self.log(log_msg)
+
+    def run(self):
+        # start log thread
+        log_thread = Thread(target=self.log_worker)
+        log_thread.setDaemon(True)
+        log_thread.start()
+
+        self.log("Start testing: {}".format(self.description))
+
+        # sending all tasks into task queue
+        # a task is just a number indication its operation sequence
+        local_dir = self.test_conf['local_dir']
+        remote_dir = self.test_conf['remote_dir']
+        files_metadata = self.driver.list_files(remote_dir=remote_dir)
+        num_regular_file = 0
+        for i, file_md in enumerate(files_metadata):
+            if file_md['is_dir']:
+                continue
+            remote_filename = file_md['path']
+            local_filename = os.path.join(local_dir, file_util.path_leaf(remote_filename))
+            self.task_queue.put((num_regular_file, remote_filename, local_filename))
+            num_regular_file += 1
+        num_operation = num_regular_file - 1
+
+        print "Number of operation: {}".format(num_operation)
+
+        # starting task worker threads
+        for i in range(self.task_thread_num):
+            t = Thread(target=self.download_worker)
+            t.setDaemon(True)
+            t.start()
+
+        print "invoking task_queue.join()..."
+
+        # wait for all tasks to be handled
+        self.task_queue.join()
+
+        print "task_queue.join() returned"
+
+        # all operations should have finished now,
+        # do not need to put to log queue first
+        self.log('\nAll {} operations finished! :)'.format(num_operation))
 
         # log statistics for operation time
         self.log_raw('\nStatistics of all operations:\n')
@@ -125,10 +185,9 @@ class DownloadTaskRunner(object):
         print ''
         print statistics
 
-    def auth_driver(self):
-        """Acquire authentication info needed to use driver"""
-        self.driver.acquire_access_token()
-
+    def debug_thread(self):
+        while True:
+            print "Number of unhandled tasks: {}".format(self.task_queue.qsize())
 
 def main(prog=None, args=None):
     arg_parser = argparse.ArgumentParser(
