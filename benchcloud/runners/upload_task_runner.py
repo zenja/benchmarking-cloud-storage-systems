@@ -213,6 +213,7 @@ class UploadTaskRunner(object):
         print 'All operations finished!'
         print ''
         print statistics
+        print '\n'
 
     def get_operation_method_params(self, file_obj):
         result = json.loads(self.operator_conf['operation_method_params'])

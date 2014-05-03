@@ -192,6 +192,7 @@ class DownloadTaskRunner(object):
         print 'All operations finished!'
         print ''
         print statistics
+        print '\n'
 
     def auth_driver(self):
         """Acquire authentication info needed to use driver"""
