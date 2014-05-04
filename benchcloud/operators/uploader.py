@@ -25,7 +25,7 @@ class Uploader(object):
             remote_dir: the directory of remote cloud
         """
         base_filename = file_util.path_leaf(local_filename)
-        if remote_dir is not None:
+        if remote_dir:
             if remote_dir[-1] != '/':
                 remote_dir += '/'
             remote_filename = remote_dir + base_filename
