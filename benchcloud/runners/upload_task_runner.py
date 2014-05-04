@@ -38,6 +38,7 @@ class UploadTaskRunner(object):
                 sys.exit(1)
         else:
             print 'The configure file does not exist: {}'.format(filename)
+            sys.exit(-1)
 
         # driver conf
         self.driver_conf = dict(self.parser.items('driver'))
