@@ -12,3 +12,6 @@ client_secret = YOUR_CLIENT_SECRET
 credentials_json = null
 guest_credentials_json = null
 
+[mega]
+email = YOUR_EMAIL
+password = YOUR_PASSWORD
