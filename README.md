@@ -4,7 +4,7 @@ benchmarking-cloud-storage-systems
 benchcloud is a tool for benchmarking cloud storage systems.
 
 Install
-------
+-------
 
 Mac OS X
 
@@ -19,6 +19,13 @@ Ubuntu
     sudo apt-get install python-dev python-pcapy
     cd benchmarking-cloud-storage-systems
     pip install -r requirements.txt
+
+Set developer keys/secrets for cloud services
+---------------------------------------------
+
+    cp benchcloud/drivers/drivers.conf.sample benchcloud/drivers/drivers.conf
+
+And edit `benchcloud/drivers/drivers.conf` to set your own developer keys/secrets.
 
 Start benchmarking
 ------------------
