@@ -7,6 +7,7 @@ import Queue
 from threading import Thread
 from time import time, localtime, strftime, sleep
 from ConfigParser import SafeConfigParser
+import random
 
 from prettytable import PrettyTable
 
@@ -58,6 +59,12 @@ class UploadTaskRunner(object):
         self.sleep_enabled = self.parser.getboolean('test', 'sleep')
         if self.sleep_enabled:
             self.sleep_seconds = self.parser.getint('test', 'sleep_seconds')
+        self.random_start_sleep_min = self.test_conf.get('random_start_sleep_min', None)
+        self.random_start_sleep_max = self.test_conf.get('random_start_sleep_max', None)
+        if self.random_start_sleep_min:
+            self.random_start_sleep_min = int(self.random_start_sleep_min)
+        if self.random_start_sleep_max:
+            self.random_start_sleep_max = int(self.random_start_sleep_max)
 
         # concurrent conf
         if self.parser.has_section('concurrent') and self.parser.has_option('concurrent', 'threads'):
@@ -130,6 +137,14 @@ class UploadTaskRunner(object):
             operation_seq = self.task_queue.get()
 
             self.log_queue.put('\nStart operation #{}'.format(operation_seq))
+
+            # random sleep before start of operation
+            if self.random_start_sleep_min is not None and self.random_start_sleep_max is not None:
+                random_start_sleep = random.randint(
+                    self.random_start_sleep_min, self.random_start_sleep_max)
+                self.log_queue.put('Operation #{}: Sleep before start: {}s'.format(
+                    operation_seq, random_start_sleep))
+                sleep(random_start_sleep)
 
             # Generate file
             self.log_queue.put('Operation #{}: Generating file...'.format(operation_seq))
