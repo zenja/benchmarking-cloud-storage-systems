@@ -173,7 +173,7 @@ class DownloadTaskRunner(object):
             local_filename = os.path.join(local_dir, file_util.path_leaf(remote_filename))
             self.task_queue.put((num_regular_file, remote_filename, local_filename))
             num_regular_file += 1
-        num_operation = num_regular_file - 1
+        num_operation = num_regular_file
 
         print "Number of operation: {}".format(num_operation)
 
