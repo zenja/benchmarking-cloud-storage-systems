@@ -136,7 +136,7 @@ class UploadTaskRunner(object):
         while True:
             operation_seq = self.task_queue.get()
 
-            self.log_queue.put('\nStart operation #{}'.format(operation_seq))
+            self.log_queue.put('Start operation #{}'.format(operation_seq))
 
             # random sleep before start of operation
             if self.random_start_sleep_min is not None and self.random_start_sleep_max is not None:
