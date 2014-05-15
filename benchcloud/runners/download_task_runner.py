@@ -105,23 +105,23 @@ class DownloadTaskRunner(object):
         table_stat.add_row(['{}ms'.format(t) for t in (t_min, t_max, t_avg)])
         return '{}\n{}'.format(str(table_op_time), str(table_stat))
 
-    def download_worker(self):
+    def download_worker(self, worker_seq):
         """A thread worker for downloading files one by one from task queue.
 
         Should be a daemon thread.
         """
+        # random sleep before start of operation
+        if self.random_start_sleep_min is not None and self.random_start_sleep_max is not None:
+            random_start_sleep = random.randint(
+                self.random_start_sleep_min, self.random_start_sleep_max)
+            self.log_queue.put('Worker #{}: Sleep before start: {}s'.format(
+                worker_seq, random_start_sleep))
+            sleep(random_start_sleep)
+
         while True:
             # get task
             operation_seq, remote_filename, local_filename = self.task_queue.get()
             self.log_queue.put(u'Start downloading file #{}: {}'.format(operation_seq, remote_filename))
-
-            # random sleep before start of operation
-            if self.random_start_sleep_min is not None and self.random_start_sleep_max is not None:
-                random_start_sleep = random.randint(
-                    self.random_start_sleep_min, self.random_start_sleep_max)
-                self.log_queue.put('Operation #{}: Sleep before start: {}s'.format(
-                    operation_seq, random_start_sleep))
-                sleep(random_start_sleep)
 
             # download the file
             millis_start = int(round(time() * 1000))
@@ -179,7 +179,7 @@ class DownloadTaskRunner(object):
 
         # starting task worker threads
         for i in range(self.task_thread_num):
-            t = Thread(target=self.download_worker)
+            t = Thread(target=self.download_worker, kwargs={'worker_seq': i})
             t.setDaemon(True)
             t.start()
 
