@@ -1,4 +1,3 @@
-import os
 import argparse
 from time import time, localtime, strftime
 
@@ -27,18 +26,15 @@ if __name__ == '__main__':
     log('Start generating file...')
     file_generator = RandomFileGenerator(directory='./', delete=True)
     tmp_file = file_generator.make_file(size=file_size)
-    tmp_filename = tmp_file.name
     log('File generated.')
-
-    # close tmp file
-    tmp_file.close()
-
-    # rename file
-    os.rename(tmp_filename, 'target_file')
 
     # upload file
     dropbox = DropboxDriver()
     dropbox.connect()
     log('Starting uploading file to {}'.format(remote_filename))
-    dropbox.upload(local_filename='./target_file', remote_filename=remote_filename)
+    dropbox.upload(local_filename=tmp_file.name, remote_filename=remote_filename)
     log('File uploading finished!')
+
+    # close tmp file
+    tmp_file.close()
+
