@@ -38,6 +38,3 @@ if __name__ == '__main__':
     log('Starting uploading file to {}'.format(remote_filename))
     dropbox.upload(local_filename='./target_file', remote_filename=remote_filename)
     log('File uploading finished!')
-
-    # close local file
-    tmp_file.close()
