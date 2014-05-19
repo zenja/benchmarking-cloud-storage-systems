@@ -29,6 +29,9 @@ if __name__ == '__main__':
     tmp_file = file_generator.make_file(size=file_size)
     log('File generated.')
 
+    # close tmp file
+    tmp_file.close()
+
     # rename file
     os.rename(tmp_file.name, 'target_file')
 
