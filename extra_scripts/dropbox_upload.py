@@ -27,13 +27,14 @@ if __name__ == '__main__':
     log('Start generating file...')
     file_generator = RandomFileGenerator(directory='./', delete=True)
     tmp_file = file_generator.make_file(size=file_size)
+    tmp_filename = tmp_file.name
     log('File generated.')
 
     # close tmp file
     tmp_file.close()
 
     # rename file
-    os.rename(tmp_file.name, 'target_file')
+    os.rename(tmp_filename, 'target_file')
 
     # upload file
     dropbox = DropboxDriver()
