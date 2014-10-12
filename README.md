@@ -3,6 +3,11 @@ benchmarking-cloud-storage-systems
 
 benchcloud is a tool for benchmarking cloud storage systems.
 
+Authors
+-------
+* Xing Wang
+* Julien Beaudaux
+
 Install
 -------
 
